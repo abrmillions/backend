@@ -1,8 +1,9 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.http import HttpResponse, JsonResponse
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.static import serve as media_serve
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -17,20 +18,13 @@ urlpatterns = [
     path("api/system/", include("systemsettings.urls")),
     path("api/contact/", include("contact.urls")),
     path("", lambda r: HttpResponse("Backend OK"), name="root"),
-    path(
-        "debug-info",
-        lambda r: JsonResponse(
-            {
-                "debug": settings.DEBUG,
-                "allowed_hosts": settings.ALLOWED_HOSTS,
-                "csrf_trusted_origins": settings.CSRF_TRUSTED_ORIGINS,
-            }
-        ),
-        name="debug_info",
-    ),
     path("health", lambda r: JsonResponse({"status": "ok"}), name="health"),
 ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+else:
+    urlpatterns += [
+        re_path(r'^media/(?P<path>.*)$', media_serve, {'document_root': settings.MEDIA_ROOT}),
+    ]
