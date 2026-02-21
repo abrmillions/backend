@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+
+# Environments
+
+venv/
+.venv/
+
+# Django media/cache (adjust if needed)
+
+*.log

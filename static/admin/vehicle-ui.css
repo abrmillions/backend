@@ -1,0 +1,112 @@
+/* Narrower content area for Vehicle admin */
+#content {
+  box-sizing: border-box;
+  max-width: 96vw;
+  margin-left: 0 !important;
+  padding: 0 12px;
+}
+
+/* Compact inline rows */
+.inline-related,
+.inline-group {
+  margin: 8px 0;
+  padding: 8px 10px;
+}
+
+.inline-related table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.inline-related table th {
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: middle;
+  text-transform: uppercase;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.inline-related table td {
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: middle;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Render file link as 'Download' instead of long path */
+.file-upload a {
+  font-size: 0;
+}
+.file-upload a::after {
+  content: "Download";
+  font-size: 13px;
+}
+
+.inline-related table a {
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 1200px) {
+  .inline-related table th:nth-child(1),
+  .inline-related table td:nth-child(1) { width: 45%; }
+  .inline-related table th:nth-child(2),
+  .inline-related table td:nth-child(2) { width: 35%; }
+  .inline-related table th:nth-child(3),
+  .inline-related table td:nth-child(3) { width: 15%; }
+  .inline-related table th:nth-child(4),
+  .inline-related table td:nth-child(4) { width: 5%; }
+}
+
+@media (max-width: 900px) {
+  #content { max-width: 98vw; padding: 0 8px; }
+  .aligned .vTextField,
+  .aligned .vURLField,
+  .aligned .vFileField { max-width: 360px; }
+}
+
+/* Smaller inputs for inline fields */
+.aligned .vTextField,
+.aligned .vURLField,
+.aligned .vFileField {
+  max-width: 420px;
+  height: 30px;
+  font-size: 13px;
+}
+
+.inline-related table th:nth-child(1),
+.inline-related table td:nth-child(1) {
+  width: 40%;
+}
+
+.inline-related table th:nth-child(2),
+.inline-related table td:nth-child(2) {
+  width: 35%;
+}
+
+.inline-related table th:nth-child(3),
+.inline-related table td:nth-child(3) {
+  width: 20%;
+}
+
+.inline-related table th:nth-child(4),
+.inline-related table td:nth-child(4) {
+  width: 5%;
+}
+
+/* Reduce label and heading spacing */
+.inline-related h3 {
+  margin: 6px 0 8px;
+  font-size: 14px;
+}
+
+/* Compact action buttons area */
+.submit-row {
+  padding: 8px 12px;
+}
