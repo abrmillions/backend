@@ -91,7 +91,7 @@ if os.environ.get("DB_ENGINE"):
             "NAME": os.environ.get("DB_NAME"),
             "USER": os.environ.get("DB_USER"),
             "PASSWORD": os.environ.get("DB_PASSWORD"),
-            "HOST": os.environ.get("DB_HOST", "dpg-d6cqpspr0fns739e96ag-a"),
+            "HOST": os.environ.get("DB_HOST", "dpg-d6cqpspr0fns739e96ag-a.oregon-postgres.render.com"),
             "PORT": os.environ.get("DB_PORT", "5432"),
         }
     }
