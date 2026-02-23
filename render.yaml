@@ -8,6 +8,8 @@ services:
     buildCommand: |
       pip install -r requirements.txt
       python manage.py collectstatic --noinput
+    preDeployCommand: |
+      python manage.py migrate --noinput
     startCommand: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
     envVars:
       - key: DJANGO_SETTINGS_MODULE
@@ -26,3 +28,4 @@ services:
         value: users.CustomUser
       - key: CORS_ALLOW_ALL_ORIGINS
         value: 1
+
