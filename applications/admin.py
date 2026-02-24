@@ -11,8 +11,8 @@ from documents.models import Document, DocumentAccessLog
 
 class DocumentInline(admin.TabularInline):
     model = Document
-    fields = ("original_filename", "name", "file_link", "uploaded_at")
-    readonly_fields = ("original_filename", "file_link", "uploaded_at")
+    fields = ("name", "file_link", "uploaded_at")
+    readonly_fields = ("file_link", "uploaded_at")
     extra = 0
 
     def file_link(self, obj):
@@ -24,11 +24,6 @@ class DocumentInline(admin.TabularInline):
         except Exception:
             return "-"
 
-    def formfield_for_dbfield(self, db_field, request, **kwargs):
-        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
-        if db_field.name == "name":
-            formfield.label = "System Document Name"
-        return formfield
 
 class ApplicationLogInline(admin.TabularInline):
     model = ApplicationLog
