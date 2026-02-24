@@ -11,7 +11,7 @@ from documents.models import Document, DocumentAccessLog
 
 class DocumentInline(admin.TabularInline):
     model = Document
-    fields = ("name", "original_filename", "file_link", "uploaded_at")
+    fields = ("original_filename", "name", "file_link", "uploaded_at")
     readonly_fields = ("original_filename", "file_link", "uploaded_at")
     extra = 0
 
