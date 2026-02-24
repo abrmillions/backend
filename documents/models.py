@@ -37,16 +37,6 @@ class Document(models.Model):
     def __str__(self):
         return self.name or self.file.name
 
-    def original_filename(self):
-        try:
-            import os
-            if self.file and getattr(self.file, "name", None):
-                return os.path.basename(self.file.name)
-        except Exception:
-            return ""
-        return ""
-    original_filename.short_description = "Uploaded File Name"
-
     def file_link(self):
         try:
             if self.file and hasattr(self.file, "url"):
