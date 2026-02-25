@@ -391,6 +391,32 @@ class LicenseVerificationView(APIView):
                         if license:
                             # We already have the license; skip number-based search
                             license_number = license.license_number or unsigned_str
+                            # If license_number is missing or in a non-canonical format, backfill a canonical value
+                            try:
+                                if not license.license_number or str(license.license_number).strip() == '':
+                                    canonical = None
+                                    data = getattr(license, 'data', None)
+                                    if isinstance(data, dict):
+                                        canonical = (
+                                            data.get('licenseNumber') or
+                                            data.get('license_number') or
+                                            data.get('registrationNumber') or
+                                            data.get('registration_number')
+                                        )
+                                    # Fallback: derive LIC-YYYY-SEQ from issued_date and id
+                                    if not canonical:
+                                        year = str((getattr(license, 'issued_date', None) or date.today()).year)
+                                        seq = f"{license.id:06d}"
+                                        canonical = f"LIC-{year}-{seq}"
+                                    license.license_number = str(canonical).strip()
+                                    try:
+                                        license.save(update_fields=['license_number'])
+                                    except Exception:
+                                        pass
+                                    license_number = license.license_number
+                            except Exception:
+                                # If backfill fails, continue using unsigned_str or existing license_number
+                                pass
                         else:
                             license_number = unsigned_str
                     except Exception:
