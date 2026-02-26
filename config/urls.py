@@ -8,6 +8,7 @@ from django.views.static import serve as media_serve
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/users/", include("users.urls")),
+    path("api/licenses/verify/", __import__("publicverify", fromlist=["verify_by_number"]).verify_by_number),
     path("api/licenses/", include("licenses.urls")),
     path("api/vehicles/", include("vehicles.urls")),
     path("api/partnerships/", include("partnerships.urls")),
