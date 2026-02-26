@@ -68,17 +68,44 @@ class LicenseVerificationView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, *args, **kwargs):
-        license_number = request.query_params.get('licenseNumber')
+        license_number = request.query_params.get('licenseNumber') or request.query_params.get('license_number')
 
         if not license_number:
             return Response({"valid": False, "detail": "License number is required."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            license = License.objects.get(license_number=license_number)
-            serializer = LicenseVerificationSerializer(license)
-            response_data = serializer.data
-            response_data['valid'] = license.is_active
-            return Response(response_data, status=status.HTTP_200_OK)
+            s = str(license_number).strip()
+            dash_chars = r"[\u2010\u2011\u2012\u2013\u2014\u2015\u2212\uFE58\uFE63\uFF0D]"
+            import re
+            s_norm = re.sub(dash_chars, "-", s)
+            lic = (License.objects.filter(license_number__iexact=s_norm).first())
+            if not lic:
+                try:
+                    lic = (
+                        License.objects.filter(
+                            models.Q(data__licenseNumber__iexact=s_norm)
+                            | models.Q(data__license_number__iexact=s_norm)
+                            | models.Q(data__registrationNumber__iexact=s_norm)
+                            | models.Q(data__registration_number__iexact=s_norm)
+                        ).first()
+                    )
+                except Exception:
+                    lic = None
+            if not lic:
+                return Response({"valid": False, "detail": "License not found."}, status=status.HTTP_404_NOT_FOUND)
+            serializer = LicenseVerificationSerializer(lic)
+            data = serializer.data
+            st = str(getattr(lic, 'status', '') or '').lower()
+            not_expired = True
+            try:
+                exp = getattr(lic, 'expiry_date', None)
+                if exp:
+                    from datetime import date
+                    not_expired = exp >= date.today()
+            except Exception:
+                not_expired = True
+            data['valid'] = (st in ('approved', 'active')) and not_expired
+            return Response(data, status=status.HTTP_200_OK)
         except License.DoesNotExist:
             return Response({"valid": False, "detail": "License not found."}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
