@@ -20,3 +20,5 @@ whitenoise
 google-generativeai
 pymupdf
 google-genai
+cloudinary
+django-cloudinary-storage
