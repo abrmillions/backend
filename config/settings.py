@@ -33,36 +33,36 @@ if DEBUG:
     ALLOWED_HOSTS = ["*"]
     if not CSRF_TRUSTED_ORIGINS:
         CSRF_TRUSTED_ORIGINS = [
-            "https://serverside-nciz.onrender.com",
-            "https://clientside-ten.vercel.app",
-            "http://localhost:3000",
-            "http://127.0.0.1:3000",
+            "https://digital-licensing.vercel.app",
+            "https://backend-8zt1.onrender.com",
+         
            
         ]
     # Ensure local dev also trusts same-origin requests
-    CSRF_TRUSTED_ORIGINS += ["http://localhost:8000", "http://127.0.0.1:8000"]
+    CSRF_TRUSTED_ORIGINS += ["https://backend-8zt1.onrender.com"]
 
 # Safe defaults for Render if not explicitly configured
 if not DEBUG:
     if not ALLOWED_HOSTS:
         ALLOWED_HOSTS = [
             ".onrender.com",
-            "localhost",
-            "127.0.0.1",
+          
             "[::1]",
         ]
     if not CSRF_TRUSTED_ORIGINS:
         CSRF_TRUSTED_ORIGINS = [
-            "https://serverside-nciz.onrender.com",
-            "https://clientside-ten.vercel.app",
+            "https://backend-8zt1.onrender.com",
+            "https://digital-licensing.vercel.app",
         ]
 INSTALLED_APPS = [
-    "django.contrib.admin",
+  "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "cloudinary_storage",
     "django.contrib.staticfiles",
+    "cloudinary",
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
@@ -185,6 +185,23 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# Cloudinary Configuration for Production
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
+}
+
+if not DEBUG:
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# Ensure MEDIA_ROOT exists during initialization
+if not MEDIA_ROOT.exists():
+    try:
+        MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
+
 # REST framework and JWT
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -220,15 +237,15 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 # In development, allow the frontend origin by default
 if DEBUG and not CORS_ALLOW_ALL_ORIGINS and not CORS_ALLOWED_ORIGINS:
     CORS_ALLOWED_ORIGINS = [
-        "http://localhost:3000",
-        "http://127.0.0.1:8000",
+        "https://digital-licensing.vercel.app",
+        "https://backend-8zt1.onrender.com",
     ]
 
 # In production, default to known frontend origin if not configured
 ADMIN_IP_WHITELIST = [ip.strip() for ip in (os.environ.get("ADMIN_IP_WHITELIST") or "").split(",") if ip.strip()]
 if not DEBUG and not CORS_ALLOW_ALL_ORIGINS and not CORS_ALLOWED_ORIGINS:
     CORS_ALLOWED_ORIGINS = [
-        "https://clientside-ten.vercel.app",
+        "https://digital-licensing.vercel.app",
     ]
 
 # QR token max age (seconds). Default 7 days; can be overridden via env var.
@@ -239,7 +256,7 @@ QR_TOKEN_MAX_AGE_SECONDS = int(os.environ.get('QR_TOKEN_MAX_AGE_SECONDS', str(60
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Chapa Payment Integration
-FRONTEND_URL = config("FRONTEND_URL", default="http://localhost:3000")
+FRONTEND_URL = config("FRONTEND_URL", default="https://digital-licensing.vercel.app")
 
 # Logging Configuration
 LOGS_DIR = BASE_DIR / "logs"
@@ -314,4 +331,3 @@ LOGGING = {
         },
     },
 }
-
