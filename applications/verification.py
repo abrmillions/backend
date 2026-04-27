@@ -21,23 +21,46 @@ try:
     from PIL import Image
     PIL_AVAILABLE = True
     
-    # Windows-specific Tesseract path configuration
+    # Improved Tesseract path configuration for both Windows and Linux
     if os.name == 'nt':
-        # Common Tesseract installation paths on Windows
+        # Windows paths
         tesseract_paths = [
             r"C:\Program Files\Tesseract-OCR\tesseract.exe",
             r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
             os.path.join(os.environ.get("USERPROFILE", ""), r"AppData\Local\Tesseract-OCR\tesseract.exe"),
-            r"C:\Users\pc\AppData\Local\Tesseract-OCR\tesseract.exe", # Specific user path from previous logs
-            r"C:\Users\pc\AppData\Local\Programs\Tesseract-OCR\tesseract.exe", # Another common user path
+            r"C:\Users\pc\AppData\Local\Tesseract-OCR\tesseract.exe",
+            r"C:\Users\pc\AppData\Local\Programs\Tesseract-OCR\tesseract.exe",
         ]
-        for path in tesseract_paths:
-            if os.path.exists(path):
-                pytesseract.pytesseract.tesseract_cmd = path
-                print(f"DEBUG: Found Tesseract at {path}")
-                break
-        else:
-            print("DEBUG: Tesseract NOT found in common paths.")
+        # Check if already in PATH
+        import subprocess
+        try:
+            subprocess.run(["tesseract", "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            print("DEBUG: Tesseract found in system PATH")
+        except FileNotFoundError:
+            for path in tesseract_paths:
+                if os.path.exists(path):
+                    pytesseract.pytesseract.tesseract_cmd = path
+                    print(f"DEBUG: Found Tesseract at {path}")
+                    break
+            else:
+                print("DEBUG: Tesseract NOT found in common paths and not in PATH.")
+    else:
+        # Linux/Unix paths - usually in PATH
+        import subprocess
+        try:
+            subprocess.run(["tesseract", "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            print("DEBUG: Tesseract found in system PATH (Linux)")
+        except FileNotFoundError:
+            # Common Linux locations as fallback
+            linux_paths = ["/usr/bin/tesseract", "/usr/local/bin/tesseract"]
+            for path in linux_paths:
+                if os.path.exists(path):
+                    pytesseract.pytesseract.tesseract_cmd = path
+                    print(f"DEBUG: Found Tesseract at {path}")
+                    break
+            else:
+                print("DEBUG: Tesseract not found in PATH or common Linux locations.")
+
 except ImportError:
     pytesseract = None
     PIL_AVAILABLE = False
@@ -172,6 +195,7 @@ def enhance_and_preprocess_image(image_bytes: bytes, target_dpi: int = 300) -> b
 def extract_text_from_image(image_bytes: bytes, lang: str = "amh+eng") -> str:
     """Extract text from image using Tesseract OCR with automatic enhancement for low-quality images"""
     if not pytesseract or not PIL_AVAILABLE:
+        print("DEBUG: Tesseract or PIL not available.")
         return ""
     
     try:
@@ -189,7 +213,20 @@ def extract_text_from_image(image_bytes: bytes, lang: str = "amh+eng") -> str:
         image = enhancer.enhance(1.3)
         
         # Try standard OCR first
-        text = pytesseract.image_to_string(image, lang=lang)
+        try:
+            text = pytesseract.image_to_string(image, lang=lang)
+        except Exception as te:
+            err_msg = str(te)
+            if "traineddata" in err_msg or "language" in err_msg:
+                print(f"CRITICAL: Tesseract language data for '{lang}' missing. Falling back to 'eng'.")
+                # Fallback to English only if Amharic fails
+                try:
+                    text = pytesseract.image_to_string(image, lang="eng")
+                except:
+                    text = ""
+            else:
+                print(f"DEBUG: Tesseract Error: {err_msg}")
+                text = ""
         
         # If OCR yields very little text, try enhanced version
         if len(text.strip()) < 15:
@@ -197,11 +234,14 @@ def extract_text_from_image(image_bytes: bytes, lang: str = "amh+eng") -> str:
             enhanced = enhance_image_for_ocr(image_bytes)
             if enhanced != image_bytes:
                 enhanced_image = Image.open(io.BytesIO(enhanced))
-                text = pytesseract.image_to_string(enhanced_image, lang=lang)
+                try:
+                    text = pytesseract.image_to_string(enhanced_image, lang=lang)
+                except:
+                    pass
         
         return text.strip()
     except Exception as e:
-        print(f"DEBUG: OCR Error: {str(e)}")
+        print(f"DEBUG: OCR General Error: {str(e)}")
         return ""
 
 def extract_text_from_pdf(pdf_bytes: bytes, lang: str = "amh+eng") -> Tuple[str, Optional[bytes]]:
@@ -1590,10 +1630,22 @@ def perform_verification(docs, category):
     print(f"DEBUG: perform_verification started for category='{category}' with {len(docs)} documents.")
     try:
         settings_obj = SystemSettings.get_solo()
-        print(f"DEBUG: SystemSettings solo object retrieved: {settings_obj}")
+        if not settings_obj:
+            print("DEBUG: SystemSettings solo object is None.")
     except Exception as se:
         print(f"DEBUG: SystemSettings retrieval failed: {str(se)}")
         settings_obj = None
+    
+    if not settings_obj:
+        # Create a dummy settings object with defaults if retrieval fails
+        from django.db import models
+        class DummySettings:
+            preferred_ai_provider = "gemini"
+            gemini_api_key = os.getenv("GEMINI_API_KEY", "")
+            openrouter_api_key = os.getenv("OPENROUTER_API_KEY", "")
+            deepseek_api_key = os.getenv("DEEPSEEK_API_KEY", "")
+            ocr_language = "amh+eng"
+        settings_obj = DummySettings()
     
     results = []
     
